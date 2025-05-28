@@ -4,6 +4,8 @@ DOMAIN = "melcloud"
 
 CONF_POSITION = "position"
 
+MANUFACTURER = "Mitsubishi Electric"
+
 ATTR_STATUS = "status"
 ATTR_VANE_HORIZONTAL = "vane_horizontal"
 ATTR_VANE_HORIZONTAL_POSITIONS = "vane_horizontal_positions"

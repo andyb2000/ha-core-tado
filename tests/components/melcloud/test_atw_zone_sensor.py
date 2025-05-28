@@ -1,6 +1,6 @@
 """Test the MELCloud ATW zone sensor."""
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -35,10 +35,13 @@ def mock_zone_2():
 
 def test_zone_unique_ids(mock_device, mock_zone_1, mock_zone_2) -> None:
     """Test unique id generation correctness."""
+    # TODO: these are quire shallow tests, need to be improved. Later PR?
+    coordinator = Mock()
     sensor_1 = AtwZoneSensor(
         mock_device,
         mock_zone_1,
         ATW_ZONE_SENSORS[0],  # room_temperature
+        coordinator,
     )
     assert sensor_1.unique_id == "1234-11:11:11:11:11:11-room_temperature"
 
@@ -46,5 +49,6 @@ def test_zone_unique_ids(mock_device, mock_zone_1, mock_zone_2) -> None:
         mock_device,
         mock_zone_2,
         ATW_ZONE_SENSORS[0],  # room_temperature
+        coordinator,
     )
     assert sensor_2.unique_id == "1234-11:11:11:11:11:11-room_temperature-zone-2"

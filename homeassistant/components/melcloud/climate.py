@@ -30,7 +30,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MelCloudDevice
 from .const import (
     ATTR_STATUS,
     ATTR_VANE_HORIZONTAL,
@@ -41,6 +40,7 @@ from .const import (
     SERVICE_SET_VANE_HORIZONTAL,
     SERVICE_SET_VANE_VERTICAL,
 )
+from .device import MelCloudDevice
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
