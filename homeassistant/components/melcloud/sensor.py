@@ -20,9 +20,6 @@ from homeassistant.const import UnitOfEnergy, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MelCloudDevice
-from .const import DOMAIN
-
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class MelcloudSensorEntityDescription(SensorEntityDescription):
@@ -109,23 +106,23 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MELCloud device sensors based on config_entry."""
-    mel_devices = hass.data[DOMAIN].get(entry.entry_id)
-
+    coordinator = entry.runtime_data
+    mel_devices = coordinator.data
     entities: list[MelDeviceSensor] = [
-        MelDeviceSensor(mel_device, description)
+        MelDeviceSensor(mel_device, description, coordinator)
         for description in ATA_SENSORS
-        for mel_device in mel_devices[DEVICE_TYPE_ATA]
+        for mel_device in mel_devices.get(DEVICE_TYPE_ATA, [])
         if description.enabled(mel_device)
     ] + [
-        MelDeviceSensor(mel_device, description)
+        MelDeviceSensor(mel_device, description, coordinator)
         for description in ATW_SENSORS
-        for mel_device in mel_devices[DEVICE_TYPE_ATW]
+        for mel_device in mel_devices.get(DEVICE_TYPE_ATW, [])
         if description.enabled(mel_device)
     ]
     entities.extend(
         [
-            AtwZoneSensor(mel_device, zone, description)
-            for mel_device in mel_devices[DEVICE_TYPE_ATW]
+            AtwZoneSensor(mel_device, zone, description, coordinator)
+            for mel_device in mel_devices.get(DEVICE_TYPE_ATW, [])
             for zone in mel_device.device.zones
             for description in ATW_ZONE_SENSORS
             if description.enabled(zone)
@@ -142,24 +139,28 @@ class MelDeviceSensor(SensorEntity):
 
     def __init__(
         self,
-        api: MelCloudDevice,
+        api,
         description: MelcloudSensorEntityDescription,
+        coordinator,
     ) -> None:
         """Initialize the sensor."""
         self._api = api
         self.entity_description = description
-
+        self.coordinator = coordinator
         self._attr_unique_id = f"{api.device.serial}-{api.device.mac}-{description.key}"
         self._attr_device_info = api.device_info
+        self._attr_should_poll = False
 
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._api)
 
-    async def async_update(self) -> None:
-        """Retrieve latest state."""
-        await self._api.async_update()
+    async def async_added_to_hass(self) -> None:
+        """Register for coordinator updates."""
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
 
 class AtwZoneSensor(MelDeviceSensor):
@@ -167,9 +168,10 @@ class AtwZoneSensor(MelDeviceSensor):
 
     def __init__(
         self,
-        api: MelCloudDevice,
+        api,
         zone: Zone,
         description: MelcloudSensorEntityDescription,
+        coordinator,
     ) -> None:
         """Initialize the sensor."""
         if zone.zone_index != 1:
@@ -177,7 +179,7 @@ class AtwZoneSensor(MelDeviceSensor):
                 description,
                 key=f"{description.key}-zone-{zone.zone_index}",
             )
-        super().__init__(api, description)
+        super().__init__(api, description, coordinator)
 
         self._attr_device_info = api.zone_device_info(zone)
         self._zone = zone

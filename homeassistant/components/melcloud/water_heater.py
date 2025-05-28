@@ -22,7 +22,6 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, MelCloudDevice
 from .const import ATTR_STATUS
 
 
@@ -31,12 +30,13 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up MelCloud device climate based on config_entry."""
-    mel_devices = hass.data[DOMAIN][entry.entry_id]
+    """Set up MelCloud device water_heater based on config_entry."""
+    coordinator = entry.runtime_data
+    mel_devices = coordinator.data
     async_add_entities(
         [
-            AtwWaterHeater(mel_device, mel_device.device)
-            for mel_device in mel_devices[DEVICE_TYPE_ATW]
+            AtwWaterHeater(mel_device, mel_device.device, coordinator)
+            for mel_device in mel_devices.get(DEVICE_TYPE_ATW, [])
         ],
         True,
     )
@@ -53,16 +53,20 @@ class AtwWaterHeater(WaterHeaterEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, api: MelCloudDevice, device: AtwDevice) -> None:
+    def __init__(self, api, device: AtwDevice, coordinator) -> None:
         """Initialize water heater device."""
         self._api = api
         self._device = device
+        self.coordinator = coordinator
         self._attr_unique_id = api.device.serial
         self._attr_device_info = api.device_info
+        self._attr_should_poll = False
 
-    async def async_update(self) -> None:
-        """Update state from MELCloud."""
-        await self._api.async_update()
+    async def async_added_to_hass(self) -> None:
+        """Register for coordinator updates."""
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""

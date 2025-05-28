@@ -38,7 +38,6 @@ from .const import (
     ATTR_VANE_VERTICAL,
     ATTR_VANE_VERTICAL_POSITIONS,
     CONF_POSITION,
-    DOMAIN,
     SERVICE_SET_VANE_HORIZONTAL,
     SERVICE_SET_VANE_VERTICAL,
 )
@@ -81,15 +80,16 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MelCloud device climate based on config_entry."""
-    mel_devices = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
+    mel_devices = coordinator.data
     entities: list[AtaDeviceClimate | AtwDeviceZoneClimate] = [
         AtaDeviceClimate(mel_device, mel_device.device)
-        for mel_device in mel_devices[DEVICE_TYPE_ATA]
+        for mel_device in mel_devices.get(DEVICE_TYPE_ATA, [])
     ]
     entities.extend(
         [
             AtwDeviceZoneClimate(mel_device, mel_device.device, zone)
-            for mel_device in mel_devices[DEVICE_TYPE_ATW]
+            for mel_device in mel_devices.get(DEVICE_TYPE_ATW, [])
             for zone in mel_device.device.zones
         ]
     )
