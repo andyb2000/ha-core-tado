@@ -3,7 +3,15 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from pyfirefly.models import About, Account, Bill, Budget, Category, Currency
+from pyfirefly.models import (
+    About,
+    Account,
+    Bill,
+    Budget,
+    BudgetLimitAttributes,
+    Category,
+    Currency,
+)
 import pytest
 
 from homeassistant.components.firefly_iii.const import DOMAIN
@@ -73,6 +81,13 @@ def mock_firefly_client() -> Generator[AsyncMock]:
             return_value=[
                 Budget.from_dict(budget)
                 for budget in load_json_array_fixture("budgets.json", DOMAIN)
+            ]
+        )
+        budget_limits_data = load_json_value_fixture("budget_limits.json", DOMAIN)
+        client.get_budget_limits = AsyncMock(
+            return_value=[
+                BudgetLimitAttributes.from_dict(limit)
+                for limit in budget_limits_data["data"]  # type: ignore[index]
             ]
         )
         client.get_bills = AsyncMock(

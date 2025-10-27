@@ -15,6 +15,9 @@
       },
       "budget": {
         "default": "mdi:chart-pie"
+      },
+      "budget_limit": {
+        "default": "mdi:chart-bar"
       }
     }
   }

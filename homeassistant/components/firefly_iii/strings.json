@@ -75,6 +75,9 @@
       },
       "budget": {
         "name": "Budget"
+      },
+      "budget_limit": {
+        "name": "Budget Limit"
       }
     }
   }

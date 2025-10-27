@@ -40,6 +40,7 @@ ACCOUNT_ROLE = "account_role"
 ACCOUNT_TYPE = "account_type"
 CATEGORY = "category"
 BUDGET = "budget"
+BUDGET_LIMIT = "budget_limit"
 
 
 async def async_setup_entry(
@@ -65,12 +66,9 @@ async def async_setup_entry(
         ]
     )
 
-    entities.extend(
-        [
-            FireflyBudgetSensor(coordinator, budget, BUDGET)
-            for budget in coordinator.data.budgets
-        ]
-    )
+    for budget in coordinator.data.budgets:
+        entities.append(FireflyBudgetSensor(coordinator, budget, BUDGET))
+        entities.append(FireflyBudgetLimitSensor(coordinator, budget, BUDGET_LIMIT))
 
     async_add_entities(entities)
 
@@ -215,3 +213,35 @@ class FireflyBudgetSensor(FireflyBudgetBaseEntity, SensorEntity):
         """Return spent value for this budget in the period."""
         spent_items = self._budget.attributes.spent or []
         return sum(float(item.sum) for item in spent_items if item.sum is not None)
+
+
+class FireflyBudgetLimitSensor(FireflyBudgetBaseEntity, SensorEntity):
+    """Budget limit sensor."""
+
+    _attr_translation_key = "budget_limit"
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_state_class = SensorStateClass.TOTAL
+
+    def __init__(
+        self,
+        coordinator: FireflyDataUpdateCoordinator,
+        budget: Budget,
+        key: str,
+    ) -> None:
+        """Initialize the budget limit sensor."""
+        super().__init__(coordinator, budget, key)
+        self._budget = budget
+        self._attr_native_unit_of_measurement = (
+            coordinator.data.primary_currency.attributes.code
+        )
+
+    @property
+    def native_value(self) -> StateType:
+        """Return limit value for this budget."""
+        budget_limit = self.coordinator.data.budget_limits.get(self._budget.id)
+        if budget_limit is None:
+            return None
+        limit = budget_limit.amount
+        if limit is None:
+            return None
+        return float(limit)
