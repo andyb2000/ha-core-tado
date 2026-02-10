@@ -31,7 +31,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=4)
-SCAN_INTERVAL = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=15)
 SCAN_MOBILE_DEVICE_INTERVAL = timedelta(minutes=5)
 
 
