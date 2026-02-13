@@ -100,7 +100,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.debug("Preloading Tado data")
             return (
                 self._tado.get_me(),
-                self._tado.get_zones(),
+                """self._tado.get_zones(),"""
                 self._tado.get_devices(),
                 self._tado.rate_limit_info(),
             )
@@ -125,11 +125,11 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.home_name = tado_home["name"]
 
         devices = await self._async_update_devices()
-        zones = await self._async_update_zones()
+        """zones = await self._async_update_zones()"""
         home = await self._async_update_home()
 
         self.data["device"] = devices
-        self.data["zone"] = zones
+        """self.data["zone"] = zones"""
         self.data["weather"] = home["weather"]
         self.data["geofence"] = home["geofence"]
         self.data["rate_limit"] = TadoRateLimit(
