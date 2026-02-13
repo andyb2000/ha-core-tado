@@ -15,6 +15,6 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["PyTado"],
-  "version": "1.0.3",
+  "version": "1.0.7",
   "requirements": ["python-tado==0.18.16"]
 }
