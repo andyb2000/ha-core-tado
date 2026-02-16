@@ -73,6 +73,7 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self.tado is not None
             tado_device_url = self.tado.device_verification_url()
             user_code = URL(tado_device_url).query["user_code"]
+            _LOGGER.debug("query URL is %s and code %s", tado_device_url, user_code)
 
         async def _wait_for_login() -> None:
             """Wait for the user to login."""
